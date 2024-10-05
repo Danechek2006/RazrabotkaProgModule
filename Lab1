@@ -1,0 +1,51 @@
+class SettingsManager:
+    _instance = None 
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(SettingsManager, cls).__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
+    def __init__(self):
+        if self._initialized:
+            return
+        self._initialized = True
+        self.theme = "light"
+        self.language = "en"
+        self.config_path = "/path/to/default/config"
+
+    def set_theme(self, theme):
+        self.theme = theme
+
+    def set_language(self, language):
+        self.language = language
+
+    def set_config_path(self, config_path):
+        self.config_path = config_path
+
+    def get_settings(self):
+        return {
+            "theme": self.theme,
+            "language": self.language,
+            "config_path": self.config_path
+        }
+
+#использование
+if __name__ == "__main__":
+    settings1 = SettingsManager()
+    print("Настройки 1:", settings1.get_settings())
+
+    settings1.set_theme("dark")
+    settings1.set_language("ru")
+    settings1.set_config_path("/new/path/to/config")
+
+    settings2 = SettingsManager()
+    print("Настройки 2:", settings2.get_settings())
+
+    assert settings1.get_settings() == settings2.get_settings(), "Настройки должны быть одинаковыми"
+
+    settings2.set_theme("light")
+    settings2.set_language("en")
+
+    print("Настройки 1 после изменений через Настройки 2:", settings1.get_settings())
