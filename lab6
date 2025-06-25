@@ -1,0 +1,39 @@
+import sys
+import random_ch
+from PyQt6.QtWidgets import (QApplication, QMainWindow,
+                             QPushButton, QLabel, QVBoxLayout, QWidget)
+from PyQt6.QtCore import Qt
+
+
+class RandomNumberGenerator(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Генератор случайных чисел")
+        self.setFixedSize(200, 200)
+
+        self.label = QLabel("", self)
+        self.label.setStyleSheet("font-size: 24px;")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.button = QPushButton("Сгенерировать число", self)
+        self.button.setStyleSheet("font-size: 16px; padding: 10px;")
+        self.button.clicked.connect(self.generate_number)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.label)
+        layout.addWidget(self.button)
+
+        container = QWidget()
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    def generate_number(self):
+        random_number = random.randint(1, 100)
+        self.label.setText(str(random_number))
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = RandomNumberGenerator()
+    window.show()
+    sys.exit(app.exec())
