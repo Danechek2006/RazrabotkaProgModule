@@ -1,0 +1,134 @@
+import sys
+from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QLabel,
+                             QSlider, QPushButton, QVBoxLayout, QHBoxLayout,
+                             QFileDialog, QComboBox)
+from PyQt6.QtGui import QImage, QPixmap, QColor, QTransform
+from PyQt6.QtCore import Qt
+
+
+class ImageEditor(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Редактор изображений")
+        self.setGeometry(100, 100, 800, 600)
+
+
+        self.original_image = None
+        self.current_image = None
+        self.rotation_angle = 0
+        self.opacity = 100
+        self.color_mode = "RGB"
+
+        self.init_ui()
+
+        self.load_image("C:\\Users\\User1\\Pictures\\Saved Pictures\\064.jpg")
+
+    def init_ui(self):
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout()
+
+        self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_layout.addWidget(self.image_label)
+
+        control_layout = QHBoxLayout()
+
+        self.load_btn = QPushButton("Загрузить изображение")
+        self.load_btn.clicked.connect(self.open_image_dialog)
+        control_layout.addWidget(self.load_btn)
+
+        self.opacity_slider = QSlider(Qt.Orientation.Horizontal)
+        self.opacity_slider.setRange(0, 100)
+        self.opacity_slider.setValue(100)
+        self.opacity_slider.valueChanged.connect(self.update_opacity)
+        control_layout.addWidget(QLabel("Прозрачность:"))
+        control_layout.addWidget(self.opacity_slider)
+
+        self.rotate_left_btn = QPushButton("Повернуть налево")
+        self.rotate_left_btn.clicked.connect(lambda: self.rotate_image(-90))
+        control_layout.addWidget(self.rotate_left_btn)
+
+        self.rotate_right_btn = QPushButton("Повернуть направо")
+        self.rotate_right_btn.clicked.connect(lambda: self.rotate_image(90))
+        control_layout.addWidget(self.rotate_right_btn)
+
+        self.channel_combo = QComboBox()
+        self.channel_combo.addItems(["Все каналы (RGB)", "Красный", "Зеленый", "Синий"])
+        self.channel_combo.currentIndexChanged.connect(self.update_color_channel)
+        control_layout.addWidget(QLabel("Цветовой канал:"))
+        control_layout.addWidget(self.channel_combo)
+
+        main_layout.addLayout(control_layout)
+        central_widget.setLayout(main_layout)
+
+    def load_image(self, path):
+        self.original_image = QImage(path)
+        if self.original_image.isNull():
+            print("Не удалось")
+            return
+
+        self.current_image = self.original_image.copy()
+        self.update_display()
+
+    def open_image_dialog(self):
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "Выберите изображение", "",
+            "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
+        )
+        if file_path:
+            self.load_image(file_path)
+
+    def update_display(self):
+        if self.current_image is None:
+            return
+
+        transform = QTransform()
+        transform.rotate(self.rotation_angle)
+        rotated_img = self.current_image.transformed(transform)
+
+        pixmap = QPixmap.fromImage(rotated_img)
+        pixmap.setDevicePixelRatio(self.devicePixelRatio())
+
+        if self.color_mode != "RGB":
+            temp_img = rotated_img.copy()
+            for y in range(temp_img.height()):
+                for x in range(temp_img.width()):
+                    color = QColor(temp_img.pixel(x, y))
+                    if self.color_mode == "R":
+                        color.setGreen(0)
+                        color.setBlue(0)
+                    elif self.color_mode == "G":
+                        color.setRed(0)
+                        color.setBlue(0)
+                    elif self.color_mode == "B":
+                        color.setRed(0)
+                        color.setGreen(0)
+                    temp_img.setPixelColor(x, y, color)
+            pixmap = QPixmap.fromImage(temp_img)
+
+        pixmap.setDevicePixelRatio(self.devicePixelRatio())
+        self.image_label.setPixmap(pixmap)
+        self.image_label.setStyleSheet(f"background-color: rgba(0, 0, 0, {self.opacity / 100});")
+
+    def update_opacity(self, value):
+        self.opacity = value
+        self.update_display()
+
+    def rotate_image(self, angle):
+        self.rotation_angle += angle
+        self.rotation_angle %= 360
+        self.update_display()
+
+    def update_color_channel(self, index):
+        channels = ["RGB", "R", "G", "B"]
+        self.color_mode = channels[index]
+        self.update_display()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = ImageEditor()
+    window.show()
+    sys.exit(app.exec())
