@@ -1,0 +1,56 @@
+from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):
+    def __init__(self, platform):
+        self.platform = platform
+
+    @abstractmethod
+    def pay(self, amount):
+        pass
+
+class CreditCardPayment(PaymentMethod):
+    def pay(self, amount):
+        self.platform.process_payment(f"Оплата картой: {amount} руб")
+
+class EWalletPayment(PaymentMethod):
+    def pay(self, amount):
+        self.platform.process_payment(f"Оплата электронными деньгами: {amount} руб")
+
+class Platform(ABC):
+    @abstractmethod
+    def process_payment(self, payment_details):
+        pass
+
+class MobileAppPlatform(Platform):
+    def process_payment(self, payment_details):
+        print(f"[Мобильное приложение] {payment_details}")
+
+class WebPlatform(Platform):
+    def process_payment(self, payment_details):
+        print(f"[Веб-сайт] {payment_details}")
+
+if __name__ == "__main__":
+    print("Выберите платформу:")
+    print("1 - Мобильное приложение")
+    print("2 - Веб-сайт")
+    platform_choice = input("Ваш выбор: ")
+
+    print("\nВыберите способ оплаты:")
+    print("1 - Кредитная карта")
+    print("2 - Электронные деньги")
+    payment_choice = input("Ваш выбор: ")
+
+    amount = float(input("Введите сумму оплаты: "))
+
+    # Создаем платформу
+    if platform_choice == "1":
+        platform = MobileAppPlatform()
+    else:
+        platform = WebPlatform()
+
+    if payment_choice == "1":
+        payment = CreditCardPayment(platform)
+    else:
+        payment = EWalletPayment(platform)
+
+    payment.pay(amount)
